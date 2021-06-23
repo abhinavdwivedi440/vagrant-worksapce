@@ -1,0 +1,91 @@
+# -*- mode: ruby -*-
+
+# vi: set ft=ruby :
+
+nodes = [
+
+    {
+        :name => "server2",
+        :eth1 => "192.168.205.11",
+        :mem => "1024",
+        :cpu => "2"
+    },
+    {
+        :name => "server3",
+        :eth1 => "192.168.205.12",
+        :mem => "2048",
+        :cpu => "2"
+    },
+    {  
+        :name => "server4",
+        :eth1 => "192.168.205.13", 
+        :mem => "1024",
+        :cpu => "2"
+    }
+]
+
+master = [
+     {
+            :name => "server1",
+            :eth1 => "192.168.205.10",
+            :mem => "2048",
+            :cpu => "2"
+        },
+]
+
+
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "bento/ubuntu-20.04"
+
+
+  # Turn off shared folders
+  #config.vm.synced_folder ".", "/vagrant", id: "vagrant-root", disabled: true
+
+
+
+  nodes.each do |opts|
+    config.vm.define opts[:name] do |config|
+      config.vm.hostname = opts[:name]
+
+      config.vm.provider "virtualbox" do |v|
+        v.memory = opts[:mem]
+        v.cpus = opts[:cpu]
+      end
+
+      config.vm.provider "virtualbox" do |v|
+        v.customize ["modifyvm", :id, "--name", opts[:name]]
+        v.customize ["modifyvm", :id, "--memory", opts[:mem]]
+        v.customize ["modifyvm", :id, "--cpus", opts[:cpu]]
+      end
+      
+      config.vm.provision "shell", inline: <<-EOC
+          echo 'export TERM=xterm' >> /home/vagrant/.bashrc
+          echo "finished"
+        EOC
+      
+      config.vm.network :private_network, ip: opts[:eth1]
+    end
+  end
+
+  master.each do |opts|
+    config.vm.define opts[:name] do |config|
+      config.vm.hostname = opts[:name]
+
+      config.vm.provider "virtualbox" do |v|
+        v.memory = opts[:mem]
+        v.cpus = opts[:cpu]
+      end
+
+      config.vm.provider "virtualbox" do |v|
+        v.customize ["modifyvm", :id, "--name", opts[:name]]
+        v.customize ["modifyvm", :id, "--memory", opts[:mem]]
+        v.customize ["modifyvm", :id, "--cpus", opts[:cpu]]
+      end
+
+      config.vm.network :private_network, ip: opts[:eth1]
+      config.vm.provision "shell", path: "./provision.sh", privileged: false
+    end
+  end
+end
