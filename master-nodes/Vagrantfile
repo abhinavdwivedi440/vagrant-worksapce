@@ -41,9 +41,10 @@ Vagrant.configure(2) do |config|
 
 
   # Turn off shared folders
-  #config.vm.synced_folder ".", "/vagrant", id: "vagrant-root", disabled: true
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
-
+  config.vm.synced_folder "/home/ash/workspace/ansible_tutorial", "/ansible_tutorial",
+    owner: "vagrant", group: "vagrant"
 
   nodes.each do |opts|
     config.vm.define opts[:name] do |config|
